@@ -11,3 +11,6 @@ It is dependent on [nlohmann-json-v3.7.3](https://github.com/nlohmann/json) for 
 Prerequisites is that the given audio tracks from Rayman have to be muted or disabled. The soundtrack will play on top of DOSBox! Easiest way to do this is replace the audio tracks with a abrupt silenced tone.
 
 Start the executable with the correct settings after DOSBox has loaded Rayman and enjoy!
+
+## License
+[LGPL v3](https://www.gnu.org/licenses/lgpl-3.0.html)
