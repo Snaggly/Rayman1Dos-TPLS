@@ -74,8 +74,6 @@ void Player::updateBossEventChange() {
 	//Just stop the track if boss battle is won, to let Midi handle the funny jingle
 	if (gameData->BossEvent)
 		Fade();
-	else
-		gameData->Music = true;
 }
 
 void Player::Play()

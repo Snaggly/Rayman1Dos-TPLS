@@ -113,7 +113,7 @@ bool RayCheck(const char* buffer) {
 __int64 worldBase = 1; //This will be the pointer to the WorldBase. Giving it a 1 to sattisfy my compiler
 HANDLE phandle; //The handle for DOSBox's process
 
-void Watch(uint64_t pDOSBox)
+void Watch(uint64_t pDOSBox, GameData* data)
 {
     __int64 worldOffset = 0x1AD804; //Hardcoding the v1.12 Worldbase address. Yeah I'm a really bad boi >:D
     __int64 value = 0; //Need a result variable when reading the pointer to DOSBox's virtual memory 
@@ -169,25 +169,9 @@ void Watch(uint64_t pDOSBox)
         Sleep(1000);
     }
 
-    //Creating new GameData struct and Players
-    //I should move this out later
-    GameData* data = new GameData;
-    BGMPlayer player(data);
-    MidiPlayer midi(data);
-    PosPlayer pos(data);
-    registerObserver(&midi);
-    registerObserver(&pos);
-    registerObserver(&player);
-
-    //Having local data here to check if something changed.
-    //Should also be moved out if I want all data passed to the listeners as one
-    bool InLevel = false;
+    //Having local data here to check if something changed for the bossevent..
     bool Music = false;
-    bool OptionsOff = false;
-    bool OptionsOn = false;
     bool BossEvent = false;
-    char b0 = 0;
-    char b1 = 1;
     //Needing to read a 0x17635 or 95797 bytes big chunk starting from the worldbase.
     //This is where my pBuffer comes in play.
     char* pBuffer = new char[0x17635];
@@ -215,6 +199,22 @@ void Watch(uint64_t pDOSBox)
         data->BossEvent = pBuffer[0x02256];
         data->XAxis = ((uint16_t)pBuffer[0x000E55] << 8) | (uint8_t)pBuffer[0x000E54];
         data->YAxis = ((uint16_t)pBuffer[0x000E59] << 8) | (uint8_t)pBuffer[0x000E58];
+
+        //Writes a false to the memory causing a glitch in Rayman which
+        //prevents playing a new track aka. the start menu track
+        //Doing this here because it's more direct...
+        if (data->BossEvent != BossEvent) {
+            BossEvent = data->BossEvent;
+            if (BossEvent && data->Music) {
+                Music = true;
+                GlitchMusic(true);
+            }
+            else if (Music){
+                Music = false;
+                GlitchMusic(false);
+                data->Music = true;
+            }
+        }
 
         notifyObservers();
 

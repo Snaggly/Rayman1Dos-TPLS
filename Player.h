@@ -6,17 +6,28 @@
 #include "GameData.h"
 #include <SFML/Audio.hpp>
 #include "FileSeekStream.h"
+#include <thread>
 
 using namespace sf;
 class Player : public Observer
 {
 private:
-	//I honestly don't know. Maybe later.
+	void FadeThread() {
+		for (float volume = 100.f; volume > 1.f; --volume) {
+			musPlayer.setVolume(volume);
+			sleep(milliseconds(100));
+		}
+		Stop();
+		musPlayer.setVolume(100.f);
+	}
+
+	//I honestly don't know what else. Maybe later.
 protected:
-	//These should be abstract. The players will handle different tracks!
+	
 	Music::Span<Time> span;
 	Music musPlayer;
-	virtual bool GetSoundtrack() = 0;
+	//This should be abstract. The players will handle different tracks!
+	virtual bool GetSoundtrack() = 0; 
 	SoundtrackData* soundtrackData = NULL;
 	FileSeekStream seeker;
 	GameData* lData = new GameData;
@@ -51,12 +62,15 @@ public:
 	}
 
 	void Fade() {
-		for (float volume = 100.f; volume > 1.f; --volume) {
-			musPlayer.setVolume(volume);
-			sleep(milliseconds(5));
-		}
-		Stop();
-		musPlayer.setVolume(100.f);
+		std::thread fader([this] {
+			for (float volume = 100.f; volume > 1.f; --volume) {
+				musPlayer.setVolume(volume);
+				sleep(milliseconds(5));
+			}
+			Stop();
+			musPlayer.setVolume(100.f);
+		});
+		fader.detach(); //So each player doesnt hang one after the other while it's looping...
 	}
 };
 

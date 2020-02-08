@@ -1,5 +1,4 @@
 #include "MidiPlayer.h"
-#include "Watchdog.h"
 
 //Handling of the Midi tracks
 SoundtrackList slMidi("Midi", "SoundtrackList.json");
@@ -15,9 +14,6 @@ bool MidiPlayer::GetSoundtrack()
 void MidiPlayer::updateBossEventChange(){
 	//Handle the victory jingle when defeating a boss!
 	if (gameData->BossEvent) {
-		//Writes a false to the memory causing a glitch in Rayman which
-		//prevents playing a new track aka. the start menu track
-		GlitchMusic(true); 
 		soundtrackData = slMidi.GetData("RAY1.WLD", "Victory");
 
 		//Repeating the Play() code... Needs some cleanup.
@@ -32,7 +28,6 @@ void MidiPlayer::updateBossEventChange(){
 		musPlayer.play();
 	}
 	else {
-		GlitchMusic(false);
-		Stop();
+		Fade();
 	}
 }

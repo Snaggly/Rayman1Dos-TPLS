@@ -5,12 +5,24 @@
 #include <string>
 #include <windows.h>
 #include "Watchdog.h"
+#include "GameData.h"
+#include "BGMPlayer.h"
+#include "MidiPlayer.h"
+#include "PosPlayer.h"
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
-    //Needs some more jobs to do, this lazy function
-    Watch(0x8D8350);
+    GameData* data = new GameData();
+    BGMPlayer* bgm = new BGMPlayer(data);
+    MidiPlayer* midi = new MidiPlayer(data);
+    PosPlayer* pos = new PosPlayer(data);
+
+    registerObserver(bgm);
+    registerObserver(midi);
+    registerObserver(pos);
+
+    Watch(0x8D8350, data);
     return 0;
 }

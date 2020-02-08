@@ -11,6 +11,6 @@
 #include "Observer.h"
 
 void registerObserver(Observer*);
-void Watch(uint64_t); //Yep
+void Watch(uint64_t, GameData*);
 bool GlitchMusic(bool);
 #endif
