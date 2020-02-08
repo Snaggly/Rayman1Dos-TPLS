@@ -7,6 +7,7 @@
 
 using namespace nlohmann;
 
+//This struct contains the neccassairy data for the music player
 struct SoundtrackData {
 	std::string FileName = std::string();
 	int64_t Offset = 0;
@@ -21,6 +22,8 @@ private:
 	SoundtrackData d;
 	json j;
 	const char* Mode;
+	//Default data from a prebuilt package. Should build this json file in case it's corrupt or not found
+	//Application will fail regardless if the prebuilt package is missing!
 	void BuildNew(const char* FileName) {
 		j = {
 			{"BGM", {
@@ -823,7 +826,7 @@ private:
 					}}
 				}},
 				{"RAY3.WLD", {
-					{"RAY2.LEV", {
+					{"RAY2.LEV1", {
 						{"File", "Music.dat"},
 						{"Offset", 97770971},
 						{"Length", 184365},
@@ -841,6 +844,7 @@ private:
 	}
 
 public:
+	//Each player will have its own soundtrack data...
 	SoundtrackList(const char* Mode, const char* JSONFile) {
 		this->Mode = Mode;
 
@@ -856,6 +860,7 @@ public:
 		}
 	}
 
+	//Returning a reference to the data the player needs. If there is no track to play, it will throw an exception and returns basically nothing!
 	SoundtrackData* GetData(std::string World, std::string Level) {
 		try {
 			auto& jMWL = j[Mode][World][Level];

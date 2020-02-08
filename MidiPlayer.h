@@ -6,12 +6,11 @@ class MidiPlayer :
 	public Player
 {
 protected:
-	void Play();
 	bool GetSoundtrack();
 
 public:
 	MidiPlayer(GameData* data) : Player(data) {}
-	virtual void updateBossEventChange(bool param);
+	void updateBossEventChange() override;
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include "Watchdog.h"
 #include "BGMPlayer.h"
 #include "MidiPlayer.h"
+#include "PosPlayer.h"
 
 //Collecting the Players here
 std::vector<Observer*> observers;
@@ -9,36 +10,11 @@ void registerObserver(Observer* observer) {
 }
 
 //Notifying the players of changes. Needing to reduce redundance later!
-void notifyChangeMusicChange(bool param) {
+void notifyObservers() {
     for (Observer* observer : observers) {
-        observer->updateMusicChange(param);
+        observer->update();
     }
 }
-
-void notifyChangeOptionsOffChange(bool param) {
-    for (Observer* observer : observers) {
-        observer->updateOptionsOffChange(param);
-    }
-}
-
-void notifyChangeOptionsOnChange(bool param) {
-    for (Observer* observer : observers) {
-        observer->updateOptionsOnChange(param);
-    }
-}
-
-void notifyChangeInLevelChange(bool param) {
-    for (Observer* observer : observers) {
-        observer->updateInLevelChange(param);
-    }
-}
-
-void notifyChangeBossEventChange(bool param) {
-    for (Observer* observer : observers) {
-        observer->updateInLevelChange(param);
-    }
-}
-//Till here. Thats a lot of neccassairy code lol
 
 //Needing to find the DOSBox Handler to get into its memory.
 //Stole the code from Stackoverflow. Any questions ask the stackoverflow people.
@@ -134,16 +110,17 @@ bool RayCheck(const char* buffer) {
     return false;
 }
 
+__int64 worldBase = 1; //This will be the pointer to the WorldBase. Giving it a 1 to sattisfy my compiler
+HANDLE phandle; //The handle for DOSBox's process
+
 void Watch(uint64_t pDOSBox)
 {
     __int64 worldOffset = 0x1AD804; //Hardcoding the v1.12 Worldbase address. Yeah I'm a really bad boi >:D
     __int64 value = 0; //Need a result variable when reading the pointer to DOSBox's virtual memory 
-    __int64 worldBase = 1; //This will be the pointer to the WorldBase. Giving it a 1 to sattisfy my compiler
     __int64 memoryTest = 0x1AD7BC; //Excepting a 320 for v1.12 when reading from DOSBox's virtual memory to this offset
     int memoryTestRes = 0;
     DWORD pid;
     hWnd;
-    HANDLE phandle;
     DWORD_PTR pMem = pDOSBox;
     DWORD_PTR address;
 
@@ -158,7 +135,7 @@ void Watch(uint64_t pDOSBox)
         }
         GetWindowThreadProcessId(hWnd, &pid);
         DWORD pidTest = GetProcessID(L"dosbox-x.exe");
-        phandle = OpenProcess(PROCESS_VM_READ, FALSE, pid);
+        phandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
         if (!phandle)
         {
             std::cout << "Could not get handle!\n";
@@ -197,8 +174,10 @@ void Watch(uint64_t pDOSBox)
     GameData* data = new GameData;
     BGMPlayer player(data);
     MidiPlayer midi(data);
-    registerObserver(&player);
+    PosPlayer pos(data);
     registerObserver(&midi);
+    registerObserver(&pos);
+    registerObserver(&player);
 
     //Having local data here to check if something changed.
     //Should also be moved out if I want all data passed to the listeners as one
@@ -207,7 +186,8 @@ void Watch(uint64_t pDOSBox)
     bool OptionsOff = false;
     bool OptionsOn = false;
     bool BossEvent = false;
-    
+    char b0 = 0;
+    char b1 = 1;
     //Needing to read a 0x17635 or 95797 bytes big chunk starting from the worldbase.
     //This is where my pBuffer comes in play.
     char* pBuffer = new char[0x17635];
@@ -218,11 +198,14 @@ void Watch(uint64_t pDOSBox)
     {
         ReadProcessMemory(phandle, (LPVOID)worldBase, pBuffer, 0x17635, 0);
         
-        //Appending each character to the corresponding string, because currently I don't know a nicer alternative
-        data->World = "";
-        data->Level = "";
-        for (int i = 0; i < 8; i++) data->World += (pBuffer[i]);
-        for (int i = 0; i < 9; i++) data->Level += (pBuffer[i + 0x0001C]);
+        //Assigning the current World and Level into the GameData struct
+        data->World.assign(pBuffer, 8);
+        data->Level.assign(pBuffer+0x0001C, 8);
+
+        //Bugfix: Previous loop having 9 iterations caused the level string to have a bigger size than
+        //characters due to a null being added extra
+        if (pBuffer[8 + 0x0001C])
+            data->Level += pBuffer[8 + 0x0001C];
         
         //Storing all the datas from each offset 
         data->InLevel = pBuffer[0x02278];
@@ -233,33 +216,24 @@ void Watch(uint64_t pDOSBox)
         data->XAxis = ((uint16_t)pBuffer[0x000E55] << 8) | (uint8_t)pBuffer[0x000E54];
         data->YAxis = ((uint16_t)pBuffer[0x000E59] << 8) | (uint8_t)pBuffer[0x000E58];
 
-
-        //Again this all below needs to be betterfied
-        if (InLevel != data->InLevel) {
-            notifyChangeInLevelChange(data->InLevel);
-            InLevel = data->InLevel;
-        }
-
-        if (Music != data->Music) {
-            notifyChangeMusicChange(data->Music);
-            Music = data->Music;
-        }
-
-        if (OptionsOn != data->OptionsOn) {
-            notifyChangeOptionsOnChange(data->OptionsOn);
-            OptionsOn = data->OptionsOn;
-        }
-
-        if (OptionsOff != data->OptionsOff) {
-            notifyChangeOptionsOffChange(data->OptionsOff);
-            OptionsOff = data->OptionsOff;
-        }
-
-        if (BossEvent != data->BossEvent) {
-            notifyChangeBossEventChange(data->BossEvent);
-            BossEvent = data->BossEvent;
-        }
+        notifyObservers();
 
         Sleep(100);
+    }
+}
+
+//Cause a glitch in Rayman to prevent the next CDDA Track to be played. Useful for the Boss Event
+bool GlitchMusic(bool enable) {
+    if (worldBase == 1)
+        return false;
+
+    char b;
+    if (enable) {
+        b = 0;
+        return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &b, sizeof(b), 0);
+    }
+    else {
+        b = 1;
+        return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &b, sizeof(b), 0);
     }
 }

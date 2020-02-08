@@ -1,38 +1,9 @@
 #include "MidiPlayer.h"
+#include "Watchdog.h"
 
 //Handling of the Midi tracks
 SoundtrackList slMidi("Midi", "SoundtrackList.json");
 
-//Unsure if I put this into the Player to reduce clutter. No significant change from BGM Player
-void MidiPlayer::Play()
-{
-	try {
-		//Before start playing a new track, I need to make sure there is a track to play
-		if (!GetSoundtrack())
-			return;
-		Stop();
-
-		//This will fail in case the soundtrackData is a nullptr! Making sure above line catches before I come here
-		if (soundtrackData->FileName == "")
-			return;
-
-		//Getting the subtrack from the container as a sub filestream
-		seeker.setData(soundtrackData->FileName.c_str(), soundtrackData->Offset, soundtrackData->Length);
-
-		//Loading the stream into SMFL's music player
-		if (!musPlayer.openFromStream(seeker)) {
-			return;
-		}
-
-		//Start playing it if everything checked out above
-		musPlayer.setLoop(true);
-		musPlayer.play();
-	}
-	catch (...) {
-		//Just in case, so the program doesn just crash. Needs proper error handling!
-		return;
-	}
-}
 
 bool MidiPlayer::GetSoundtrack()
 {
@@ -41,9 +12,12 @@ bool MidiPlayer::GetSoundtrack()
 	return soundtrackData->FileName != "";
 }
 
-void MidiPlayer::updateBossEventChange(bool param) {
+void MidiPlayer::updateBossEventChange(){
 	//Handle the victory jingle when defeating a boss!
-	if (param) {
+	if (gameData->BossEvent) {
+		//Writes a false to the memory causing a glitch in Rayman which
+		//prevents playing a new track aka. the start menu track
+		GlitchMusic(true); 
 		soundtrackData = slMidi.GetData("RAY1.WLD", "Victory");
 
 		//Repeating the Play() code... Needs some cleanup.
@@ -58,6 +32,7 @@ void MidiPlayer::updateBossEventChange(bool param) {
 		musPlayer.play();
 	}
 	else {
+		GlitchMusic(false);
 		Stop();
 	}
 }

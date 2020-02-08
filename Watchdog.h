@@ -10,6 +10,7 @@
 #include "GameData.h"
 #include "Observer.h"
 
-void Watch(uint64_t pDOSBox); //Yep
-
+void registerObserver(Observer*);
+void Watch(uint64_t); //Yep
+bool GlitchMusic(bool);
 #endif

@@ -16,25 +16,28 @@ protected:
 	//These should be abstract. The players will handle different tracks!
 	Music::Span<Time> span;
 	Music musPlayer;
-	virtual void Play() = 0;
 	virtual bool GetSoundtrack() = 0;
 	SoundtrackData* soundtrackData = NULL;
 	FileSeekStream seeker;
+	GameData* lData = new GameData;
 
 public:
 	Player(GameData* data) { gameData = data; }
 	GameData* gameData; //Needs a reference to the current game data to make case switches in the functions below
 
 	//Observer functions
-	virtual void update(void* param);
-	virtual void updateMusicChange(bool param);
-	virtual void updateOptionsOffChange(bool param);
-	virtual void updateOptionsOnChange(bool param);
-	virtual void updateInLevelChange(bool param);
-	virtual void updateBossEventChange(bool param) = 0; //This one is abstract! Players will handle a Boss Event differently!
-	
+	virtual void update();
+	virtual void updateMusicChange();
+	virtual void updateOptionsOffChange();
+	virtual void updateOptionsOnChange();
+	virtual void updateInLevelChange();
+	virtual void updateBossEventChange();
+	virtual void updateXAxis();
+	virtual void updateYAxis();
 
 	//Basic functions all players should have! 
+	virtual void Play(); //See cpp file..
+
 	void Pause() {
 		musPlayer.pause();
 	}

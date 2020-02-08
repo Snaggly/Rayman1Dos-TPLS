@@ -102,6 +102,7 @@
     <ClCompile Include="FileSeekStream.cpp" />
     <ClCompile Include="MidiPlayer.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="PosPlayer.cpp" />
     <ClCompile Include="TPLSservice.cpp" />
     <ClCompile Include="Watchdog.cpp" />
   </ItemGroup>
@@ -113,6 +114,7 @@
     <ClInclude Include="Observer.h" />
     <ClInclude Include="PackageBuilder.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="PosPlayer.h" />
     <ClInclude Include="SoundtrackList.h" />
     <ClInclude Include="Watchdog.h" />
   </ItemGroup>
