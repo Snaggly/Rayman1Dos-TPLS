@@ -27,7 +27,4 @@ void MidiPlayer::updateBossEventChange(){
 		musPlayer.setLoop(true);
 		musPlayer.play();
 	}
-	else {
-		Fade();
-	}
 }

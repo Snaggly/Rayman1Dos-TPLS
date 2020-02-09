@@ -12,18 +12,8 @@ using namespace sf;
 class Player : public Observer
 {
 private:
-	void FadeThread() {
-		for (float volume = 100.f; volume > 1.f; --volume) {
-			musPlayer.setVolume(volume);
-			sleep(milliseconds(100));
-		}
-		Stop();
-		musPlayer.setVolume(100.f);
-	}
 
-	//I honestly don't know what else. Maybe later.
 protected:
-	
 	Music::Span<Time> span;
 	Music musPlayer;
 	//This should be abstract. The players will handle different tracks!

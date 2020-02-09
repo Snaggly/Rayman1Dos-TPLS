@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-#include <windows.h>
 #include "Watchdog.h"
 #include "GameData.h"
 #include "BGMPlayer.h"
@@ -23,6 +22,7 @@ int main(int argc, char *argv[])
     registerObserver(midi);
     registerObserver(pos);
 
-    Watch(0x8D8350, data);
-    return 0;
+    if (Watch(0x8D8350, data))
+        return 0;
+    return 1;
 }

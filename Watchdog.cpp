@@ -1,7 +1,4 @@
 #include "Watchdog.h"
-#include "BGMPlayer.h"
-#include "MidiPlayer.h"
-#include "PosPlayer.h"
 
 //Collecting the Players here
 std::vector<Observer*> observers;
@@ -112,10 +109,89 @@ bool RayCheck(const char* buffer) {
 
 __int64 worldBase = 1; //This will be the pointer to the WorldBase. Giving it a 1 to sattisfy my compiler
 HANDLE phandle; //The handle for DOSBox's process
+GameData* data;
 
-void Watch(uint64_t pDOSBox, GameData* data)
+//Cause a glitch in Rayman to prevent the next CDDA Track to be played. Useful for the Boss Event
+bool GlitchMusic(bool enable) {
+    if (worldBase == 1)
+        return false;
+
+    char b;
+    if (enable) {
+        b = 0;
+        return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &b, sizeof(b), 0);
+    }
+    else {
+        b = 1;
+        return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &b, sizeof(b), 0);
+    }
+}
+
+void FetchData() {
+    //Checking if already glitched for BossEvent..
+    bool Glitched = false;
+    //Needing to read a 0x17635 or 95797 bytes big chunk starting from the worldbase.
+    //This is where my pBuffer comes in play.
+    char* pBuffer = new char[0x17635];
+    pBuffer[0] = 1;
+
+    //This is prolly the only loop in need in the final
+    while (IsProcessStillRunning())
+    {
+        ReadProcessMemory(phandle, (LPVOID)worldBase, pBuffer, 0x17635, 0);
+
+        //Assigning the current World and Level into the GameData struct
+        data->World.assign(pBuffer, 8);
+        data->Level.assign(pBuffer + 0x0001C, 8);
+
+        //Bugfix: Previous loop having 9 iterations caused the level string to have a bigger size than
+        //characters due to a null being added extra
+        if (pBuffer[8 + 0x0001C])
+            data->Level += pBuffer[8 + 0x0001C];
+
+        //Storing all the datas from each offset 
+        data->InLevel = pBuffer[0x02278]; //Will have those addresses read injected
+        data->Music = pBuffer[0x02232] + Glitched;// + Music; later to allow other Rayman version working
+        data->OptionsOn = pBuffer[0x174E7];
+        data->OptionsOff = pBuffer[0x174E9];
+        data->BossEvent = pBuffer[0x02256];
+        data->XAxis = ((uint16_t)pBuffer[0x000E55] << 8) | (uint8_t)pBuffer[0x000E54];
+        data->YAxis = ((uint16_t)pBuffer[0x000E59] << 8) | (uint8_t)pBuffer[0x000E58];
+
+        
+        //Writes a false to the memory causing a glitch in Rayman which
+        //prevents playing a new track aka. the start menu track
+        //Doing this here because it's more direct...
+
+        //Bugfix. The Soundtrack on higher level Boss played before BossEvent fired
+        //Predetecting if in Bosslevel
+        
+        if ((data->World == "RAY1.WLD" && data->Level == "RAY6.LEV")
+            || (data->World == "RAY1.WLD" && data->Level == "RAY16.LEV")
+            || (data->World == "RAY2.WLD" && data->Level == "RAY16.LEV")
+            || (data->World == "RAY3.WLD" && data->Level == "RAY10.LEV")
+            || (data->World == "RAY4.WLD" && data->Level == "RAY4.LEV")
+            || (data->World == "RAY4.WLD" && data->Level == "RAY11.LEV")
+            || (data->World == "RAY5.WLD" && data->Level == "RAY11.LEV")) {
+            if (data->Music && data->InLevel) {
+                Glitched = true;
+                GlitchMusic(true);
+            }
+            else if (Glitched && !data->InLevel) {
+                Glitched = false;
+                GlitchMusic(false);
+            }
+        }
+
+        notifyObservers();
+
+        Sleep(100);
+    }
+}
+
+bool Watch(uint64_t pDOSBox, GameData* pdata)
 {
-    __int64 worldOffset = 0x1AD804; //Hardcoding the v1.12 Worldbase address. Yeah I'm a really bad boi >:D
+    __int64 worldOffset = 0x1AD804; //Hardcoding the v1.12 Worldbase address. Will change later, not so hard boi anymore :(
     __int64 value = 0; //Need a result variable when reading the pointer to DOSBox's virtual memory 
     __int64 memoryTest = 0x1AD7BC; //Excepting a 320 for v1.12 when reading from DOSBox's virtual memory to this offset
     int memoryTestRes = 0;
@@ -123,30 +199,27 @@ void Watch(uint64_t pDOSBox, GameData* data)
     hWnd;
     DWORD_PTR pMem = pDOSBox;
     DWORD_PTR address;
-
-    while (1)
+    data = pdata;
+    
+    hWnd = GetDOSBoxHwnd();
+    if (!hWnd)
     {
-        Sleep(1000); //The while loop will be gone soon. This should not be running if DOSBox's hasn't been started up before!
-        hWnd = GetDOSBoxHwnd();
-        if (!hWnd)
-        {
-            std::cout << "Window not found!\n";
-            continue;
-        }
-        GetWindowThreadProcessId(hWnd, &pid);
-        DWORD pidTest = GetProcessID(L"dosbox-x.exe");
-        phandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-        if (!phandle)
-        {
-            std::cout << "Could not get handle!\n";
-            continue;
-        }
-        address = GetProcessBaseAddress(pid); //Getting Base Address, not every dosbox uses a fixed base address!
-        std::cout << "Got base address: " << address << std::endl;
-        address += pMem; //Address here should go to the global pointer, which points towards the virtual memory I'm looking for 
-        std::cout << "Pointer: " << address << std::endl;
-        break;
+        std::cout << "Window not found!\n";
+        return false;
     }
+    GetWindowThreadProcessId(hWnd, &pid);
+    DWORD pidTest = GetProcessID(L"dosbox-x.exe");
+    phandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    if (!phandle)
+    {
+        std::cout << "Could not get handle!\n";
+        return false;
+    }
+    address = GetProcessBaseAddress(pid); //Getting Base Address, not every dosbox uses a fixed base address!
+    std::cout << "Got base address: " << address << std::endl;
+    address += pMem; //Address here should go to the global pointer, which points towards the virtual memory I'm looking for 
+    std::cout << "Pointer: " << address << std::endl;
+    
 
     while (IsProcessStillRunning() && worldBase == 1)
     { //Now Loop while DOSBox's is still running and apparently the compatible Rayman version hasnt't been started yet..
@@ -169,71 +242,7 @@ void Watch(uint64_t pDOSBox, GameData* data)
         Sleep(1000);
     }
 
-    //Having local data here to check if something changed for the bossevent..
-    bool Music = false;
-    bool BossEvent = false;
-    //Needing to read a 0x17635 or 95797 bytes big chunk starting from the worldbase.
-    //This is where my pBuffer comes in play.
-    char* pBuffer = new char[0x17635];
-    pBuffer[0] = 1;
+    FetchData();
 
-    //This is prolly the only loop in need in the final
-    while (IsProcessStillRunning())
-    {
-        ReadProcessMemory(phandle, (LPVOID)worldBase, pBuffer, 0x17635, 0);
-        
-        //Assigning the current World and Level into the GameData struct
-        data->World.assign(pBuffer, 8);
-        data->Level.assign(pBuffer+0x0001C, 8);
-
-        //Bugfix: Previous loop having 9 iterations caused the level string to have a bigger size than
-        //characters due to a null being added extra
-        if (pBuffer[8 + 0x0001C])
-            data->Level += pBuffer[8 + 0x0001C];
-        
-        //Storing all the datas from each offset 
-        data->InLevel = pBuffer[0x02278];
-        data->Music = pBuffer[0x02232];
-        data->OptionsOn = pBuffer[0x174E7];
-        data->OptionsOff = pBuffer[0x174E9];
-        data->BossEvent = pBuffer[0x02256];
-        data->XAxis = ((uint16_t)pBuffer[0x000E55] << 8) | (uint8_t)pBuffer[0x000E54];
-        data->YAxis = ((uint16_t)pBuffer[0x000E59] << 8) | (uint8_t)pBuffer[0x000E58];
-
-        //Writes a false to the memory causing a glitch in Rayman which
-        //prevents playing a new track aka. the start menu track
-        //Doing this here because it's more direct...
-        if (data->BossEvent != BossEvent) {
-            BossEvent = data->BossEvent;
-            if (BossEvent && data->Music) {
-                Music = true;
-                GlitchMusic(true);
-            }
-            else if (Music){
-                Music = false;
-                GlitchMusic(false);
-                data->Music = true;
-            }
-        }
-
-        notifyObservers();
-
-        Sleep(100);
-    }
-}
-
-//Cause a glitch in Rayman to prevent the next CDDA Track to be played. Useful for the Boss Event
-bool GlitchMusic(bool enable) {
-    if (worldBase == 1)
-        return false;
-
-    char b;
-    if (enable) {
-        b = 0;
-        return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &b, sizeof(b), 0);
-    }
-    else {
-        b = 1;
-        return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &b, sizeof(b), 0);
-    }
+    return true;
 }
