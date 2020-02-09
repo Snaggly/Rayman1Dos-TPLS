@@ -12,6 +12,8 @@ using namespace sf;
 class Player : public Observer
 {
 private:
+	//To prevent two faders overlapping
+	bool IsFading = false;
 
 protected:
 	Music::Span<Time> span;
@@ -21,6 +23,8 @@ protected:
 	SoundtrackData* soundtrackData = NULL;
 	FileSeekStream seeker;
 	GameData* lData = new GameData;
+	char xsection = 0;
+	char ysection = 0;
 
 public:
 	Player(GameData* data) { gameData = data; }
@@ -52,15 +56,20 @@ public:
 	}
 
 	void Fade() {
-		std::thread fader([this] {
-			for (float volume = 100.f; volume > 1.f; --volume) {
-				musPlayer.setVolume(volume);
-				sleep(milliseconds(5));
-			}
-			Stop();
-			musPlayer.setVolume(100.f);
-		});
-		fader.detach(); //So each player doesnt hang one after the other while it's looping...
+		if (!IsFading) {
+			IsFading = true;
+			std::thread fader([this] {
+				for (float volume = 100.f; volume > 1.f; --volume) {
+					musPlayer.setVolume(volume);
+					sleep(milliseconds(5));
+				}
+				Stop();
+				musPlayer.setVolume(100.f);
+				IsFading = false;
+				});
+			fader.detach(); //So each player doesnt hang one after the other while it's looping...
+		}
+		
 	}
 };
 

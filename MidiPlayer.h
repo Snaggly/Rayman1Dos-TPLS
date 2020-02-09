@@ -11,6 +11,7 @@ protected:
 public:
 	MidiPlayer(GameData* data) : Player(data) {}
 	void updateBossEventChange() override;
+	void updateXAxis() override;
 };
 
 #endif
