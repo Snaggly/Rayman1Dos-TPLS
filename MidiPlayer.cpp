@@ -4,9 +4,6 @@
 SoundtrackList slMidi("Midi", "SoundtrackList.json");
 SoundtrackList slMidiPos("Pos", "SoundtrackList.json");
 
-//First attempt of "better handling" from last complaint
-bool EventPlaying = false;
-
 bool MidiPlayer::GetSoundtrack()
 {
 	if (EventPlaying)

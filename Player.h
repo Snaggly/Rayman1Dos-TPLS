@@ -12,8 +12,7 @@ using namespace sf;
 class Player : public Observer
 {
 private:
-	//To prevent two faders overlapping
-	bool IsFading = false;
+	bool IsFading = false; //To prevent two faders overlapping
 
 protected:
 	Music::Span<Time> span;
@@ -25,6 +24,7 @@ protected:
 	GameData* lData = new GameData;
 	char xsection = 0;
 	char ysection = 0;
+	bool EventPlaying = false; //First attempt of "better handling" from last complaint
 
 public:
 	Player(GameData* data) { gameData = data; }

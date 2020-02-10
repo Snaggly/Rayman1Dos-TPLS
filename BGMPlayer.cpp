@@ -6,6 +6,9 @@ SoundtrackList slPos("Pos", "SoundtrackList.json");
 
 bool BGMPlayer::GetSoundtrack()
 {
+	if (EventPlaying)
+		return false;
+
 	if (xsection + ysection)
 		soundtrackData = slPos.GetData(gameData->World.c_str(), (gameData->Level + std::to_string(xsection + ysection)).c_str());
 	else
@@ -61,6 +64,9 @@ void BGMPlayer::updateYAxis()
 				ysection = 2;
 				updateInLevelChange();
 			}
+		}
+		else {
+			ysection = 0;
 		}
 	}
 	else {

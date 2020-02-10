@@ -135,8 +135,6 @@ bool MuteCDDA(bool enable) {
 }
 
 void FetchData() {
-    //Checking if already glitched for BossEvent..
-    bool Glitched = false;
     //Needing to read a 0x17635 or 95797 bytes big chunk starting from the worldbase.
     //This is where my pBuffer comes in play.
     char* pBuffer = new char[0x17635];
@@ -158,53 +156,22 @@ void FetchData() {
 
         //Storing all the datas from each offset 
         data->InLevel = pBuffer[0x02278]; //Will have those addresses read injected
-        data->Music = pBuffer[0x02232] + Glitched;// + Music; later to allow other Rayman version working
+        data->Music = pBuffer[0x02232];
         data->OptionsOn = pBuffer[0x174E7];
         data->OptionsOff = pBuffer[0x174E9];
         data->BossEvent = pBuffer[0x02256];
         data->XAxis = ((uint16_t)pBuffer[0x000E55] << 8) | (uint8_t)pBuffer[0x000E54];
         data->YAxis = ((uint16_t)pBuffer[0x000E59] << 8) | (uint8_t)pBuffer[0x000E58];
 
-
         //Reading addittional data too see when new World is being loaded
-        ReadProcessMemory(phandle, (LPVOID)(worldBase+0x1BCF6), (LPVOID)(pBuffer+9), 1, 0);
+        ReadProcessMemory(phandle, (LPVOID)(worldBase - 0x61EF), (LPVOID)(pBuffer+9), 1, 0);
         data->WorldLoading = pBuffer[9];
-        
-        //Writes a false to the memory causing a glitch in Rayman which
-        //prevents playing a new track aka. the start menu track
-        //Doing this here because it's more direct...
-
-        //Bugfix. The Soundtrack on higher level Boss played before BossEvent fired
-        //Predetecting if in Bosslevel
-        
-        if ((data->World == "RAY1.WLD" && data->Level == "RAY6.LEV")
-            || (data->World == "RAY1.WLD" && data->Level == "RAY16.LEV")
-            || (data->World == "RAY2.WLD" && data->Level == "RAY16.LEV")
-            || (data->World == "RAY3.WLD" && data->Level == "RAY10.LEV")
-            || (data->World == "RAY4.WLD" && data->Level == "RAY4.LEV")
-            || (data->World == "RAY4.WLD" && data->Level == "RAY11.LEV")
-            || (data->World == "RAY5.WLD" && data->Level == "RAY11.LEV")) {
-            if (data->Music && data->InLevel) {
-                Glitched = true;
-                GlitchMusic(false);
-            }
-            else if (Glitched && !data->InLevel) {
-                Glitched = false;
-                GlitchMusic(true);
-            }
-        }
-        else if (Glitched) {
-            Glitched = false;
-            GlitchMusic(true);
-        }
 
         notifyObservers();
 
+        //Immediatly mute CDDA if TPLS is playing!
         if (playingSate())
             MuteCDDA(false);
-        else
-            MuteCDDA(true);
-
 
         Sleep(100);
     }
