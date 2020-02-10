@@ -10,6 +10,7 @@
 #include "GameData.h"
 #include "Observer.h"
 
+void registerPlayingState(void* fktPtr);
 void registerObserver(Observer*);
 bool Watch(uint64_t, GameData*);
 bool GlitchMusic(bool);

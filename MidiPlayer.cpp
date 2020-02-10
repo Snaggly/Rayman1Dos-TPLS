@@ -4,8 +4,14 @@
 SoundtrackList slMidi("Midi", "SoundtrackList.json");
 SoundtrackList slMidiPos("Pos", "SoundtrackList.json");
 
+//First attempt of "better handling" from last complaint
+bool EventPlaying = false;
+
 bool MidiPlayer::GetSoundtrack()
 {
+	if (EventPlaying)
+		return true;
+
 	if (xsection)
 		soundtrackData = slMidiPos.GetData(gameData->World.c_str(), (gameData->Level + std::to_string(xsection)).c_str());
 	else
@@ -18,16 +24,11 @@ void MidiPlayer::updateBossEventChange(){
 	if (gameData->BossEvent) {
 		soundtrackData = slMidi.GetData("RAY1.WLD", "Victory");
 
-		//Repeating the Play() code... Needs some cleanup.
-		if (soundtrackData->FileName == "")
-			return;
-
-		seeker.setData(soundtrackData->FileName.c_str(), soundtrackData->Offset, soundtrackData->Length);
-		if (!musPlayer.openFromStream(seeker)) {
-			return;
-		}
-		musPlayer.setLoop(true);
-		musPlayer.play();
+		EventPlaying = true;
+		Play();
+	}
+	else {
+		EventPlaying = false;
 	}
 }
 
@@ -61,18 +62,11 @@ void MidiPlayer::updateWorldLoading()
 	if (gameData->WorldLoading) {
 		soundtrackData = slMidi.GetData("RAY1.WLD", "Loading");
 
-		//Repeating the Play() code... Needs some cleanup.
-		if (soundtrackData->FileName == "")
-			return;
-
-		seeker.setData(soundtrackData->FileName.c_str(), soundtrackData->Offset, soundtrackData->Length);
-		if (!musPlayer.openFromStream(seeker)) {
-			return;
-		}
-		musPlayer.setLoop(true);
-		musPlayer.play();
+		EventPlaying = true;
+		Play();
 	}
 	else {
 		Fade();
+		EventPlaying = false;
 	}
 }

@@ -62,9 +62,9 @@ void BGMPlayer::updateYAxis()
 				updateInLevelChange();
 			}
 		}
-		else {
-			ysection = 0;
-		}
+	}
+	else {
+		ysection = 0;
 	}
 }
 

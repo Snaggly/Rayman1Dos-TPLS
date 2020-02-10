@@ -10,12 +10,20 @@
 
 using namespace std;
 
+BGMPlayer* bgm;
+MidiPlayer* midi;
+
+bool GetPlayingstates() {
+    return bgm->PlayingStatus() + midi->PlayingStatus();
+}
+
 int main(int argc, char *argv[])
 {
     GameData* data = new GameData();
-    BGMPlayer* bgm = new BGMPlayer(data);
-    MidiPlayer* midi = new MidiPlayer(data);
+    bgm = new BGMPlayer(data);
+    midi = new MidiPlayer(data);
 
+    registerPlayingState(&GetPlayingstates);
     registerObserver(bgm);
     registerObserver(midi);
 

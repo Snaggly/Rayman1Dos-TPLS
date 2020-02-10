@@ -2,6 +2,12 @@
 
 //Collecting the Players here
 std::vector<Observer*> observers;
+
+bool (*playingSate) (); //For Muting.. Assigned externally!
+void registerPlayingState(void* fktPtr) {
+    playingSate = (bool(*)())fktPtr;
+}
+
 void registerObserver(Observer* observer) {
     observers.push_back(observer);
 }
@@ -110,21 +116,22 @@ bool RayCheck(const char* buffer) {
 __int64 worldBase = 1; //This will be the pointer to the WorldBase. Giving it a 1 to sattisfy my compiler
 HANDLE phandle; //The handle for DOSBox's process
 GameData* data;
+DWORD_PTR baseaddr = 0;
 
 //Cause a glitch in Rayman to prevent the next CDDA Track to be played. Useful for the Boss Event
 bool GlitchMusic(bool enable) {
     if (worldBase == 1)
         return false;
 
-    char b;
-    if (enable) {
-        b = 0;
-        return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &b, sizeof(b), 0);
-    }
-    else {
-        b = 1;
-        return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &b, sizeof(b), 0);
-    }
+    return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &enable, sizeof(enable), 0);
+}
+
+//Quickly mute the CDDA channel from DOSBox. Requires static address
+bool MuteCDDA(bool enable) {
+    if (baseaddr == 0)
+        return false;
+    
+    return WriteProcessMemory(phandle, (LPVOID)(baseaddr + 0x2F7D894), &enable, sizeof(enable), 0);
 }
 
 void FetchData() {
@@ -179,15 +186,25 @@ void FetchData() {
             || (data->World == "RAY5.WLD" && data->Level == "RAY11.LEV")) {
             if (data->Music && data->InLevel) {
                 Glitched = true;
-                GlitchMusic(true);
+                GlitchMusic(false);
             }
             else if (Glitched && !data->InLevel) {
                 Glitched = false;
-                GlitchMusic(false);
+                GlitchMusic(true);
             }
+        }
+        else if (Glitched) {
+            Glitched = false;
+            GlitchMusic(true);
         }
 
         notifyObservers();
+
+        if (playingSate())
+            MuteCDDA(false);
+        else
+            MuteCDDA(true);
+
 
         Sleep(100);
     }
@@ -219,7 +236,8 @@ bool Watch(uint64_t pDOSBox, GameData* pdata)
         std::cout << "Could not get handle!\n";
         return false;
     }
-    address = GetProcessBaseAddress(pid); //Getting Base Address, not every dosbox uses a fixed base address!
+    baseaddr = GetProcessBaseAddress(pid);
+    address = baseaddr; //Getting Base Address, not every dosbox uses a fixed base address!
     std::cout << "Got base address: " << address << std::endl;
     address += pMem; //Address here should go to the global pointer, which points towards the virtual memory I'm looking for 
     std::cout << "Pointer: " << address << std::endl;

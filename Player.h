@@ -72,6 +72,10 @@ public:
 		}
 		
 	}
+
+	bool PlayingStatus() {
+		return musPlayer.getStatus() == musPlayer.Playing;
+	}
 };
 
 #endif
