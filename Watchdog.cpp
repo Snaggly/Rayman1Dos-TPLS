@@ -158,6 +158,10 @@ void FetchData() {
         data->XAxis = ((uint16_t)pBuffer[0x000E55] << 8) | (uint8_t)pBuffer[0x000E54];
         data->YAxis = ((uint16_t)pBuffer[0x000E59] << 8) | (uint8_t)pBuffer[0x000E58];
 
+
+        //Reading addittional data too see when new World is being loaded
+        ReadProcessMemory(phandle, (LPVOID)(worldBase+0x1BCF6), (LPVOID)(pBuffer+9), 1, 0);
+        data->WorldLoading = pBuffer[9];
         
         //Writes a false to the memory causing a glitch in Rayman which
         //prevents playing a new track aka. the start menu track

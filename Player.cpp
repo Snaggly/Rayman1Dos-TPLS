@@ -36,6 +36,11 @@ void Player::update() {
 		updateYAxis();
 		lData->YAxis = gameData->YAxis;
 	}
+
+	if (lData->WorldLoading != gameData->WorldLoading) {
+		updateWorldLoading();
+		lData->WorldLoading = gameData->WorldLoading;
+	}
 		
 }
 
@@ -68,11 +73,6 @@ void Player::updateInLevelChange() {
 	//Else the following could have happened: Rayman died and became unplayable for a brief,
 	//a cutscene is playing, Rayman is back on overworld. Fade out the music and stop the stream here to be restarted later!
 	else
-		Fade();
-}
-void Player::updateBossEventChange() {
-	//Just stop the track if boss battle is won, to let Midi handle the funny jingle
-	if (gameData->BossEvent)
 		Fade();
 }
 
@@ -112,7 +112,3 @@ void Player::Play()
 		return;
 	}
 }
-
-void Player::updateXAxis(){} //Let the PosPlayer take over for these two...
-
-void Player::updateYAxis(){}

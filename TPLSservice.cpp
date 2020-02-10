@@ -14,10 +14,10 @@ int main(int argc, char *argv[])
 {
     GameData* data = new GameData();
     BGMPlayer* bgm = new BGMPlayer(data);
-    //MidiPlayer* midi = new MidiPlayer(data);
+    MidiPlayer* midi = new MidiPlayer(data);
 
     registerObserver(bgm);
-    //registerObserver(midi);
+    registerObserver(midi);
 
     if (Watch(0x8D8350, data))
         return 0;

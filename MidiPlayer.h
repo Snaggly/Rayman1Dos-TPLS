@@ -10,8 +10,10 @@ protected:
 
 public:
 	MidiPlayer(GameData* data) : Player(data) {}
-	void updateBossEventChange() override;
-	void updateXAxis() override;
+	void updateBossEventChange();
+	void updateXAxis();
+	void updateYAxis();
+	void updateWorldLoading();
 };
 
 #endif

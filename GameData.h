@@ -14,6 +14,8 @@ struct GameData {
     bool OptionsOn; //Triggered if the Options panel is visible
     bool OptionsOff; //Triggered false if player requests for the options panel
     bool InLevel; //Triggers true if Rayman is currently playable
+
+    bool WorldLoading; //When the world loading screen is displayed
 };
 
 #endif // !GAMEDATASTRUCT

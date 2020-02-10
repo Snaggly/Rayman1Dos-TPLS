@@ -51,3 +51,28 @@ void MidiPlayer::updateXAxis()
 		xsection = 0;
 	}
 }
+
+void MidiPlayer::updateYAxis()
+{
+}
+
+void MidiPlayer::updateWorldLoading()
+{
+	if (gameData->WorldLoading) {
+		soundtrackData = slMidi.GetData("RAY1.WLD", "Loading");
+
+		//Repeating the Play() code... Needs some cleanup.
+		if (soundtrackData->FileName == "")
+			return;
+
+		seeker.setData(soundtrackData->FileName.c_str(), soundtrackData->Offset, soundtrackData->Length);
+		if (!musPlayer.openFromStream(seeker)) {
+			return;
+		}
+		musPlayer.setLoop(true);
+		musPlayer.play();
+	}
+	else {
+		Fade();
+	}
+}

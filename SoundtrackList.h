@@ -697,6 +697,14 @@ private:
 						{"LoopOffset", 0},
 						{"LoopLength", 0},
 						{"Loop", false}
+					}},
+					{"Loading", {
+						{"File", "Music.dat"},
+						{"Offset", 103574017},
+						{"Length", 197647},
+						{"LoopOffset", 0},
+						{"LoopLength", 0},
+						{"Loop", false}
 					}}
 				}},
 				{"RAY2.WLD", {

@@ -36,9 +36,10 @@ public:
 	virtual void updateOptionsOffChange();
 	virtual void updateOptionsOnChange();
 	virtual void updateInLevelChange();
-	virtual void updateBossEventChange();
-	virtual void updateXAxis();
-	virtual void updateYAxis();
+	virtual void updateBossEventChange() = 0;
+	virtual void updateXAxis() = 0;
+	virtual void updateYAxis() = 0;
+	virtual void updateWorldLoading() = 0;
 
 	//Basic functions all players should have! 
 	virtual void Play(); //See cpp file..

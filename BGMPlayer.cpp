@@ -67,3 +67,13 @@ void BGMPlayer::updateYAxis()
 		}
 	}
 }
+
+void BGMPlayer::updateBossEventChange() {
+	//Just stop the track if boss battle is won, to let Midi handle the funny jingle
+	if (gameData->BossEvent)
+		Fade();
+}
+
+void BGMPlayer::updateWorldLoading()
+{
+}
