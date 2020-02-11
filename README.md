@@ -10,9 +10,8 @@ It is dependent on [nlohmann-json-v3.7.3](https://github.com/nlohmann/json) for 
 ## Usage
 Easiest way to use TPLS under Windows is to download the latest update for Rayman Plus and launch Rayman from there. Alternatively you can download the latest binary from the releases. Be aware that you'll have to manage the Soundtrack files and the DOSBox pointers on your own. To see how I built the default "Music.dat" file refer to [PackageBuilder.h](https://github.com/Snaggly/Rayman1Dos-TPLS/blob/master/PackageBuilder.h). Each release will be by default bounded to a given DOSBox and Rayman version. See the release notes. To be able to use it under a different DOSBox release you'll have to assign a different Pointer and CDDA address in your DOSBox-Offsets.json file. Finding these can be done with CheatEngine. In the release notes you will also find the information to which Rayman version it is bounded to. To change that you will have to define other offsets in the same file. See [OffsetList.h](https://github.com/Snaggly/Rayman1Dos-TPLS/blob/master/OffsetList.h) in the comments for the known values.
 
-**Examples**
-
-*Changing Soundtrack for Level 4*
+##Examples
+***Changing Soundtrack for Level 4***
 ```json
 "RAY4.LEV": {
 	"File": "Music.dat",
@@ -26,7 +25,7 @@ Easiest way to use TPLS under Windows is to download the latest update for Rayma
 to:
 ```json
 "RAY4.LEV": {
-	"File": "E:\MyMusic\MyBetterMusic.ogg",
+	"File": "E:\\MyMusic\\MyBetterMusic.ogg",
 	"Length": 5327144,
 	"Loop": false,
 	"LoopLength": 0,
@@ -36,7 +35,7 @@ to:
 ```
 Here I changed the default track, which was in the Music.dat package at an 37066076 offset and having a length of 1164268 to a local file at E:\MyMusic\MyBetterMusic.ogg. Keep in mind since it's local, the starting position/offset of the actual OGG file will be a 0, while the length will be the actual file length in bytes. Since it doesn't have looping attributes, meaning that after a given length in microseconds the soundstream jumps back to a given offset in microseconds, both values can stay at 0 and Loop will can be false. Loop in this scope is just to activate the looping attributes! The track will still loop, but from the beginning!
 
-*Changing Rayman v1.12 to v1.00*
+***Changing Rayman v1.12 to v1.00***
 ```json
 {
     "BossEvent": 8790,
