@@ -116,6 +116,7 @@ bool RayCheck(const char* buffer) {
 __int64 worldBase = 1; //This will be the pointer to the WorldBase. Giving it a 1 to sattisfy my compiler
 HANDLE phandle; //The handle for DOSBox's process
 GameData* data;
+Offsets* loffsets;
 DWORD_PTR baseaddr = 0;
 
 //Cause a glitch in Rayman to prevent the next CDDA Track to be played. Useful for the Boss Event
@@ -123,7 +124,7 @@ bool GlitchMusic(bool enable) {
     if (worldBase == 1)
         return false;
 
-    return WriteProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), &enable, sizeof(enable), 0);
+    return WriteProcessMemory(phandle, (LPVOID)(worldBase + loffsets->Music), &enable, sizeof(enable), 0);
 }
 
 //Quickly mute the CDDA channel from DOSBox. Requires static address
@@ -131,7 +132,7 @@ bool MuteCDDA(bool enable) {
     if (baseaddr == 0)
         return false;
     
-    return WriteProcessMemory(phandle, (LPVOID)(baseaddr + 0x2F7D894), &enable, sizeof(enable), 0);
+    return WriteProcessMemory(phandle, (LPVOID)(baseaddr + loffsets->CDDA), &enable, sizeof(enable), 0);
 }
 
 void FetchData() {
@@ -148,7 +149,7 @@ void FetchData() {
         data->World.assign(pBuffer, 8);
 
         //Reading level
-        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x0001C), pBuffer+9, 9, 0); //Will have offsets injected later
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->Level), pBuffer+9, 9, 0); //Will have offsets injected later
         data->Level.assign(pBuffer + 9, 8);
 
         //Bugfix: Previous loop having 9 iterations caused the level string to have a bigger size than
@@ -157,31 +158,31 @@ void FetchData() {
             data->Level += pBuffer[17];
 
         //Reading InLevel
-        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x02278), pBuffer+18, 1, 0);
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->InLevel), pBuffer+18, 1, 0);
         data->InLevel = pBuffer[18];
 
         //Reading Music
-        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), pBuffer + 19, 1, 0);
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->Music), pBuffer + 19, 1, 0);
         data->Music = pBuffer[19];
 
         //Reading OptionsOn
-        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x174E7), pBuffer + 20, 1, 0);
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->OptionsOn), pBuffer + 20, 1, 0);
         data->OptionsOn = pBuffer[20];
 
         //Reading OptionsOff
-        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x174E9), pBuffer + 21, 1, 0);
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->OptionsOff), pBuffer + 21, 1, 0);
         data->OptionsOff = pBuffer[21];
 
         //Reading BossEvent
-        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x02256), pBuffer + 22, 1, 0);
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->BossEvent), pBuffer + 22, 1, 0);
         data->BossEvent = pBuffer[22];
 
         //Reading XAxis
-        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x000E54), pBuffer + 23, 2, 0);
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->XAxis), pBuffer + 23, 2, 0);
         data->XAxis = ((uint16_t)pBuffer[24] << 8) | (uint8_t)pBuffer[23];
 
         //Reading YAxis
-        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x000E58), pBuffer + 25, 2, 0);
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->YAxis), pBuffer + 25, 2, 0);
         data->YAxis = ((uint16_t)pBuffer[26] << 8) | (uint8_t)pBuffer[25];
 
         notifyObservers();
@@ -194,15 +195,15 @@ void FetchData() {
     }
 }
 
-bool Watch(uint64_t pDOSBox, GameData* pdata)
+bool Watch(Offsets* offsets, GameData* pdata)
 {
-    __int64 worldOffset = 0x1AD804; //Hardcoding the v1.12 Worldbase address. Will change later, not so hard boi anymore :(
+    __int64 worldOffset = offsets->WorldBase; //Hardcoding the v1.12 Worldbase address. Will change later, not so hard boi anymore :(
     __int64 value = 0; //Need a result variable when reading the pointer to DOSBox's virtual memory 
-    __int64 memoryTest = 0x1AD7BC; //Excepting a 320 for v1.12 when reading from DOSBox's virtual memory to this offset
+    __int64 memoryTest = offsets->MemoryTest; //Excepting a 320 for v1.12 when reading from DOSBox's virtual memory to this offset
     int memoryTestRes = 0;
     DWORD pid;
     hWnd;
-    DWORD_PTR pMem = pDOSBox;
+    DWORD_PTR pMem = offsets->Pointer;
     DWORD_PTR address;
     data = pdata;
     
@@ -248,6 +249,7 @@ bool Watch(uint64_t pDOSBox, GameData* pdata)
         Sleep(1000);
     }
 
+    loffsets = offsets;
     FetchData();
 
     return true;

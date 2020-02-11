@@ -111,6 +111,7 @@
     <ClInclude Include="GameData.h" />
     <ClInclude Include="MidiPlayer.h" />
     <ClInclude Include="Observer.h" />
+    <ClInclude Include="OffsetList.h" />
     <ClInclude Include="PackageBuilder.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="SoundtrackList.h" />

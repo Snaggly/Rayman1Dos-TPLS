@@ -9,9 +9,10 @@
 #include <vector>
 #include "GameData.h"
 #include "Observer.h"
+#include "OffsetList.h"
 
 void registerPlayingState(void* fktPtr);
 void registerObserver(Observer*);
-bool Watch(uint64_t, GameData*);
+bool Watch(Offsets*, GameData*);
 bool GlitchMusic(bool);
 #endif

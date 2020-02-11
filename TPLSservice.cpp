@@ -5,6 +5,7 @@
 #include <string>
 #include "Watchdog.h"
 #include "GameData.h"
+#include "OffsetList.h"
 #include "BGMPlayer.h"
 #include "MidiPlayer.h"
 
@@ -19,6 +20,10 @@ bool GetPlayingstates() {
 
 int main(int argc, char *argv[])
 {
+    Offsets* offsetData = (OffsetList("DOSBox-Offsets.json").GetData());
+    if (offsetData == nullptr)
+        return 2;
+
     GameData* data = new GameData();
     bgm = new BGMPlayer(data);
     midi = new MidiPlayer(data);
@@ -27,7 +32,7 @@ int main(int argc, char *argv[])
     registerObserver(bgm);
     registerObserver(midi);
 
-    if (Watch(0x8D8350, data))
+    if (Watch(offsetData, data))
         return 0;
     return 1;
 }
