@@ -36,11 +36,6 @@ void Player::update() {
 		updateYAxis();
 		lData->YAxis = gameData->YAxis;
 	}
-
-	if (lData->WorldLoading != gameData->WorldLoading) {
-		updateWorldLoading();
-		lData->WorldLoading = gameData->WorldLoading;
-	}
 		
 }
 

@@ -137,43 +137,60 @@ bool MuteCDDA(bool enable) {
 void FetchData() {
     //Needing to read a 0x17635 or 95797 bytes big chunk starting from the worldbase.
     //This is where my pBuffer comes in play.
-    char* pBuffer = new char[0x17635];
+    char* pBuffer = new char[27];
     pBuffer[0] = 1;
 
     //This is prolly the only loop in need in the final
     while (IsProcessStillRunning())
     {
-        ReadProcessMemory(phandle, (LPVOID)worldBase, pBuffer, 0x17635, 0);
-
-        //Assigning the current World and Level into the GameData struct
+        //Reading world
+        ReadProcessMemory(phandle, (LPVOID)worldBase, pBuffer, 8, 0);
         data->World.assign(pBuffer, 8);
-        data->Level.assign(pBuffer + 0x0001C, 8);
+
+        //Reading level
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x0001C), pBuffer+9, 9, 0); //Will have offsets injected later
+        data->Level.assign(pBuffer + 9, 8);
 
         //Bugfix: Previous loop having 9 iterations caused the level string to have a bigger size than
         //characters due to a null being added extra
-        if (pBuffer[8 + 0x0001C])
-            data->Level += pBuffer[8 + 0x0001C];
+        if (pBuffer[17])
+            data->Level += pBuffer[17];
 
-        //Storing all the datas from each offset 
-        data->InLevel = pBuffer[0x02278]; //Will have those addresses read injected
-        data->Music = pBuffer[0x02232];
-        data->OptionsOn = pBuffer[0x174E7];
-        data->OptionsOff = pBuffer[0x174E9];
-        data->BossEvent = pBuffer[0x02256];
-        data->XAxis = ((uint16_t)pBuffer[0x000E55] << 8) | (uint8_t)pBuffer[0x000E54];
-        data->YAxis = ((uint16_t)pBuffer[0x000E59] << 8) | (uint8_t)pBuffer[0x000E58];
+        //Reading InLevel
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x02278), pBuffer+18, 1, 0);
+        data->InLevel = pBuffer[18];
 
-        //Reading addittional data too see when new World is being loaded
-        ReadProcessMemory(phandle, (LPVOID)(worldBase - 0x61EF), (LPVOID)(pBuffer+9), 1, 0);
-        data->WorldLoading = pBuffer[9];
+        //Reading Music
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x02232), pBuffer + 19, 1, 0);
+        data->Music = pBuffer[19];
+
+        //Reading OptionsOn
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x174E7), pBuffer + 20, 1, 0);
+        data->OptionsOn = pBuffer[20];
+
+        //Reading OptionsOff
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x174E9), pBuffer + 21, 1, 0);
+        data->OptionsOff = pBuffer[21];
+
+        //Reading BossEvent
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x02256), pBuffer + 22, 1, 0);
+        data->BossEvent = pBuffer[22];
+
+        //Reading XAxis
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x000E54), pBuffer + 23, 2, 0);
+        data->XAxis = ((uint16_t)pBuffer[24] << 8) | (uint8_t)pBuffer[23];
+
+        //Reading YAxis
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + 0x000E58), pBuffer + 25, 2, 0);
+        data->YAxis = ((uint16_t)pBuffer[26] << 8) | (uint8_t)pBuffer[25];
 
         notifyObservers();
 
         //Immediatly mute CDDA if TPLS is playing!
         if (playingSate())
-            MuteCDDA(false);
+            MuteCDDA(false); //note: false means muting
 
-        Sleep(100);
+        Sleep(10);
     }
 }
 

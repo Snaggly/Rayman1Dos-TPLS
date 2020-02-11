@@ -53,17 +53,3 @@ void MidiPlayer::updateXAxis()
 void MidiPlayer::updateYAxis()
 {
 }
-
-void MidiPlayer::updateWorldLoading()
-{
-	if (gameData->WorldLoading) {
-		soundtrackData = slMidi.GetData("RAY1.WLD", "Loading");
-
-		EventPlaying = true;
-		Play();
-	}
-	else {
-		Fade();
-		EventPlaying = false;
-	}
-}

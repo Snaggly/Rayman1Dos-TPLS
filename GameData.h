@@ -15,7 +15,8 @@ struct GameData {
     bool OptionsOff; //Triggered false if player requests for the options panel
     bool InLevel; //Triggers true if Rayman is currently playable
 
-    bool WorldLoading; //When the world loading screen is displayed
+    //Removed Worldloading from last commit.
+    //Reason being the address I found doesn't just trigger when loading screen appears...
 };
 
 #endif // !GAMEDATASTRUCT
