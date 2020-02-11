@@ -165,13 +165,14 @@ void FetchData() {
         ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->Music), pBuffer + 19, 1, 0);
         data->Music = pBuffer[19];
 
-        //Reading OptionsOn
-        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->OptionsOn), pBuffer + 20, 1, 0);
-        data->OptionsOn = pBuffer[20];
 
         //Reading OptionsOff
         ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->OptionsOff), pBuffer + 21, 1, 0);
         data->OptionsOff = pBuffer[21];
+
+        //Reading OptionsOn
+        ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->OptionsOn), pBuffer + 20, 1, 0);
+        data->OptionsOn = pBuffer[20];
 
         //Reading BossEvent
         ReadProcessMemory(phandle, (LPVOID)(worldBase + loffsets->BossEvent), pBuffer + 22, 1, 0);
@@ -197,9 +198,8 @@ void FetchData() {
 
 bool Watch(Offsets* offsets, GameData* pdata)
 {
-    __int64 worldOffset = offsets->WorldBase; //Hardcoding the v1.12 Worldbase address. Will change later, not so hard boi anymore :(
+    __int64 worldOffset = offsets->WorldBase;
     __int64 value = 0; //Need a result variable when reading the pointer to DOSBox's virtual memory 
-    __int64 memoryTest = offsets->MemoryTest; //Excepting a 320 for v1.12 when reading from DOSBox's virtual memory to this offset
     int memoryTestRes = 0;
     DWORD pid;
     hWnd;
@@ -237,12 +237,8 @@ bool Watch(Offsets* offsets, GameData* pdata)
         else {
             std::cout << "Pointer found! At: " << value << std::endl;
             worldBase = value + worldOffset; 
-            //Do a quick test if I got the correct address. If not should just stop.
-            ReadProcessMemory(phandle, (LPVOID)(value + memoryTest), &memoryTestRes, 2, 0);
-            if (memoryTestRes == 320) {
-                std::cout << "Game found at: " << worldBase << std::endl;
-                break;
-            }
+            std::cout << "Game found at: " << worldBase << std::endl;
+            break;
         }
         worldBase = 1;
         std::cout << "No Worldbase found yet!" << std::endl;

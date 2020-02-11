@@ -7,11 +7,6 @@ void Player::update() {
 		lData->BossEvent = gameData->BossEvent;
 	}
 
-	if (lData->InLevel != gameData->InLevel) {
-		updateInLevelChange();
-		lData->InLevel = gameData->InLevel;
-	}
-
 	if (lData->Music != gameData->Music) {
 		updateMusicChange();
 		lData->Music = gameData->Music;
@@ -36,7 +31,11 @@ void Player::update() {
 		updateYAxis();
 		lData->YAxis = gameData->YAxis;
 	}
-		
+
+	if (lData->InLevel != gameData->InLevel) {
+		updateInLevelChange();
+		lData->InLevel = gameData->InLevel;
+	}
 }
 
 //When the Music is switched off from the Options let the Music Player set the state of Stopped, so the
@@ -63,7 +62,7 @@ void Player::updateOptionsOnChange() {
 
 void Player::updateInLevelChange() {
 	//Is Rayman currently Playable and the following conditions meet?
-	if (gameData->InLevel && gameData->OptionsOff && gameData->Music && !gameData->OptionsOn)
+	if (gameData->InLevel && gameData->Music && !gameData->OptionsOn)
 		Play();
 	//Else the following could have happened: Rayman died and became unplayable for a brief,
 	//a cutscene is playing, Rayman is back on overworld. Fade out the music and stop the stream here to be restarted later!
