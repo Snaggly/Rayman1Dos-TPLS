@@ -10,7 +10,7 @@ It is dependent on [nlohmann-json-v3.7.3](https://github.com/nlohmann/json) for 
 ## Usage
 Easiest way to use TPLS under Windows is to download the latest update for Rayman Plus and launch Rayman from there. Alternatively you can download the latest binary from the releases. Be aware that you'll have to manage the Soundtrack files and the DOSBox pointers on your own. To see how I built the default "Music.dat" file refer to [PackageBuilder.h](https://github.com/Snaggly/Rayman1Dos-TPLS/blob/master/PackageBuilder.h). Each release will be by default bounded to a given DOSBox and Rayman version. See the release notes. To be able to use it under a different DOSBox release you'll have to assign a different Pointer and CDDA address in your DOSBox-Offsets.json file. Finding these can be done with CheatEngine. In the release notes you will also find the information to which Rayman version it is bounded to. To change that you will have to define other offsets in the same file. See [OffsetList.h](https://github.com/Snaggly/Rayman1Dos-TPLS/blob/master/OffsetList.h) in the comments for the known values.
 
-##Examples
+## Examples
 ***Changing Soundtrack for Level 4***
 ```json
 "RAY4.LEV": {
